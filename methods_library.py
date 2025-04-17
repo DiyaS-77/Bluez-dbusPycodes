@@ -1,16 +1,20 @@
 import dbus
 import time 
 
+BLUEZ_SERVICE='org.bluez'
+BLUEZ_ADAPTER= 'org.bluez.Adapter1'
+BLUEZ_DEVICE='org.bluez.Device1'
+
 class BluetoothManager:
     def __init__(self):
         self.system_bus=dbus.SystemBus()
-        self.obj_manager=self.system_bus.get_object('org.bluez','/')
+        self.obj_manager=self.system_bus.get_object(BLUEZ_SERVICE,'/')
         self.obj_ic=dbus.Interface(self.obj_manager,'org.freedesktop.DBus.ObjectManager')
         self.list_devices() 
-        self.adapter_obj=self.system_bus.get_object('org.bluez',self.adapter_path)
-        self.adapter_ic=dbus.Interface(self.adapter_obj,'org.bluez.Adapter1')
+        self.adapter_obj=self.system_bus.get_object(BLUEZ_SERVICE,self.adapter_path)
+        self.adapter_ic=dbus.Interface(self.adapter_obj,BLUEZ_ADAPTER)
         self.prop_ic=dbus.Interface(self.adapter_obj,'org.freedesktop.DBus.Properties')
-        self.agent_obj=self.system_bus.get_object('org.bluez','/org/bluez')
+        self.agent_obj=self.system_bus.get_object(BLUEZ_SERVICE,'/org/bluez')
         self.agent_ic=dbus.Interface(self.agent_obj,'org.bluez.AgentManager1')
         
 
@@ -23,8 +27,8 @@ class BluetoothManager:
         managed_objects=self.obj_ic.GetManagedObjects()
         devices=[]
         for path, interfaces in managed_objects.items():
-                if 'org.bluez.Device1' in interfaces:
-                        device=interfaces['org.bluez.Device1']
+                if BLUEZ_DEVICE in interfaces:
+                        device=interfaces[BLUEZ_DEVICE]
                         name=device.get('Name','Unknown')
                         address=device.get('Address','Unknown')
                         self.adapter_path=device['Adapter']
@@ -36,7 +40,7 @@ class BluetoothManager:
         Retrieve specific property of adapter interface and its current value
         '''
         property_name=input('Enter the name of property:')
-        property_value=self.prop_ic.Get('org.bluez.Adapter1',property_name)
+        property_value=self.prop_ic.Get(BLUEZ_ADAPTER,property_name)
         print(f'{property_name}:{property_value}')
 
     
@@ -53,7 +57,7 @@ class BluetoothManager:
                 variant1=dbus.Boolean(value)
         else:
                 variant1=dbus.String(value)
-        self.prop_ic.Set('org.bluez.Adapter1',property_name,variant1)
+        self.prop_ic.Set(BLUEZ_ADAPTER,property_name,variant1)
         
     
     def start_discovery(self):
@@ -66,8 +70,8 @@ class BluetoothManager:
 
         managed_objects=self.obj_ic.GetManagedObjects()
         for path, interfaces in managed_objects.items():
-                if 'org.bluez.Device1' in interfaces:
-                        device=interfaces['org.bluez.Device1']
+                if BLUEZ_DEVICE in interfaces:
+                        device=interfaces[BLUEZ_DEVICE]
                         name=device.get('Name','Unknown')
                         address=device.get('Address','Unknown')
                         print(f'Discovered device: {name} : [{address}]')
@@ -86,8 +90,8 @@ class BluetoothManager:
                         device_path=path
                         break
 
-        device_obj=self.system_bus.get_object('org.bluez',device_path)
-        device_ic=dbus.Interface(device_obj,'org.bluez.Device1')
+        device_obj=self.system_bus.get_object(BLUEZ_SERVICE,device_path)
+        device_ic=dbus.Interface(device_obj,BLUEZ_DEVICE)
         return device_ic
 
     def pair_device(self,device_address):
@@ -156,8 +160,8 @@ class BluetoothManager:
         managed_objects=self.obj_ic.GetManagedObjects()
         print('Paired devices---')
         for paths,interfaces in managed_objects.items():
-                if 'org.bluez.Device1' in interfaces:
-                        device=interfaces['org.bluez.Device1']
+                if BLUEZ_DEVICE in interfaces:
+                        device=interfaces[BLUEZ_DEVICE]
                         if device['Paired'] == True:
                                 print(device['Address'])
         device_address=input('Enter the BD-address of the device you want to remove:')
@@ -173,7 +177,7 @@ class BluetoothManager:
         for path,interfaces in managed_objects.items():
                 if 'org.bluez.MediaPlayer1' in interfaces:
                         media_path=path
-        media_obj=self.system_bus.get_object('org.bluez',media_path)
+        media_obj=self.system_bus.get_object(BLUEZ_SERVICE,media_path)
         media_ic=dbus.Interface(media_obj,'org.bluez.MediaPlayer1')
         props_ic=dbus.Interface(media_obj,'org.freedesktop.DBus.Properties')
         while True:
@@ -205,7 +209,7 @@ class BluetoothManager:
                         device_path=path
                         break
 
-        device_obj=self.system_bus.get_object('org.bluez',device_path)
+        device_obj=self.system_bus.get_object(BLUEZ_SERVICE,device_path)
         device_ic=dbus.Interface(device_obj,'org.bluez.MediaControl1')
         while True:
             user_in=input('1.Start playing 2.Next 3.Stop playing 4.Exit...: ')
