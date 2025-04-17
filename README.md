@@ -1,6 +1,6 @@
-This repository contains two  Python files
 
-1. main.py
-   -Acts as the entry point of the program 
-2. methods_library.py
-   -Contains method definitions
+## Files
+
+- **methods_library.py**: Contains the `BluetoothManager` class with various methods to interact with Bluetooth devices.
+- **main.py**: Provides a menu-driven interface for users to interact with the `BluetoothManager` class.
+
