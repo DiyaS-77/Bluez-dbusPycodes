@@ -175,11 +175,23 @@ class BluetoothManager:
                         media_path=path
         media_obj=self.system_bus.get_object('org.bluez',media_path)
         media_ic=dbus.Interface(media_obj,'org.bluez.MediaPlayer1')
-        media_ic.Play()
-        media_ic.Next()
-        media_ic.FastForward()
-        time.sleep(20)
-        media_ic.Pause() 
+        props_ic=dbus.Interface(media_obj,'org.freedesktop.DBus.Properties')
+        while True:
+            user_input=input('Choose an option: 1.Get property 2.Set property 3.Play 4.Pause 5.Exit :')
+            if user_input == '1':
+                property_name=input('Enter the name of property:')
+                property_value=props_ic.Get('org.bluez.MediaPlayer1',property_name)
+                print(f"{property_name}:{property_value}")
+            elif user_input == '2':
+                prop_name=input('Enter the name of property you want to change:')
+                prop_value=input('Enter the value:')
+                props_ic.Set('org.bluez.MediaPlayer1',prop_name,prop_value)
+            elif user_input == '3':
+                media_ic.Play()
+            elif user_input == '4':
+                media_ic.Pause()
+            elif user_input == '5':
+                break
 
     def media_control(self,device_address):
         '''
