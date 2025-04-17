@@ -46,7 +46,7 @@ class BluetoothManager:
     
     def set_property(self):
         '''
-        Change the value of a specific property
+        Modify the value of specific property
         '''
         property_name=input('Enter the name of property you want to set:')
         value_type=input('Enter the type of value (string,boolean,int32,uint32..etc)')
@@ -171,7 +171,7 @@ class BluetoothManager:
         
     def media_player(self):
         '''
-        Provides more detailed interaction with the mediaplayer 
+        Provides more detailed interaction with the specific mediaplayer  (obtain metadata and read/write properties)
         '''
         managed_objects=self.obj_ic.GetManagedObjects()
         for path,interfaces in managed_objects.items():
