@@ -16,7 +16,7 @@ LE_ADVERTISEMENT_IFACE = 'org.bluez.LEAdvertisement1'
 
 IAS_UUID = '1802'
 ALERT_LEVEL_UUID = '2A06'
-CUSTOM_NOTIFY_UUID = '12345678-1234-5678-1234-56789abcdef0'
+aler uuid 
 
 
 class Application(dbus.service.Object):
@@ -85,46 +85,7 @@ class AlertLevelCharacteristic(dbus.service.Object):
         self.bus = bus
         self.service = service
         self.uuid = ALERT_LEVEL_UUID
-        self.flags = ['write-without-response']
-        dbus.service.Object.__init__(self, bus, self.path)
-
-    def get_path(self):
-        return dbus.ObjectPath(self.path)
-
-    def get_properties(self):
-        return {
-            GATT_CHARACTERISTIC_IFACE: {
-                'UUID': self.uuid,
-                'Service': self.service.get_path(),
-                'Flags': dbus.Array(self.flags, signature='s')
-            }
-        }
-
-    @dbus.service.method(GATT_CHARACTERISTIC_IFACE,
-                         in_signature='aya{sv}', out_signature='')
-    def WriteValue(self, value, options):
-        level = int(value[0])
-        msg = "Unknown Alert"
-        if level == 0:
-            msg = "No Alert"
-        elif level == 1:
-            msg = "Mild Alert"
-        elif level == 2:
-            msg = "High Alert"
-
-        print(f"[AlertLevelCharacteristic] Received alert level: {msg}")
-
-        # Send notification via custom status characteristic
-        self.service.status_char.send_notification(msg)
-
-
-class StatusCharacteristic(dbus.service.Object):
-    def __init__(self, bus, index, service):
-        self.path = f'{service.get_path()}/char{index}'
-        self.bus = bus
-        self.service = service
-        self.uuid = CUSTOM_NOTIFY_UUID
-        self.flags = ['notify']
+        self.flags = ['write-without-response', 'notify']
         self.notifying = False
         dbus.service.Object.__init__(self, bus, self.path)
 
@@ -144,14 +105,18 @@ class StatusCharacteristic(dbus.service.Object):
     @dbus.service.method(GATT_CHARACTERISTIC_IFACE,
                          in_signature='', out_signature='')
     def StartNotify(self):
+        if self.notifying:
+            return
         self.notifying = True
-        print("[StatusCharacteristic] Notifications enabled")
+        print("[AlertLevelCharacteristic] Notifications enabled")
 
     @dbus.service.method(GATT_CHARACTERISTIC_IFACE,
                          in_signature='', out_signature='')
     def StopNotify(self):
+        if not self.notifying:
+            return
         self.notifying = False
-        print("[StatusCharacteristic] Notifications disabled")
+        print("[AlertLevelCharacteristic] Notifications disabled")
 
     def send_notification(self, message):
         if not self.notifying:
@@ -165,6 +130,27 @@ class StatusCharacteristic(dbus.service.Object):
     def PropertiesChanged(self, interface, changed, invalidated):
         pass
 
+    @dbus.service.method(GATT_CHARACTERISTIC_IFACE,
+                         in_signature='aya{sv}', out_signature='')
+    def WriteValue(self, value, options):
+        level = int(value[0])
+        msg = "Unknown Alert"
+        if level == 0:
+            msg = "No Alert"
+        elif level == 1:
+            msg = "Mild Alert"
+        elif level == 2:
+            msg = "High Alert"
+
+        print(f"[AlertLevelCharacteristic] Received alert level: {msg}")
+
+        # Send notification from this characteristic
+        self.send_notification(msg)
+
+        # Also notify via status characteristic
+        self.service.status_char.send_notification(msg)
+
+         
 
 class Advertisement(dbus.service.Object):
     PATH = '/org/bluez/example/advertisement0'
@@ -221,16 +207,16 @@ def main():
     app.add_service(ias_service)
 
     service_manager.RegisterApplication(app.get_path(), {},
-        reply_handler=lambda: print("✅ GATT application registered"),
-        error_handler=lambda e: print(f"❌ Failed to register application: {e}"))
+        reply_handler=lambda: print("GATT application registered"),
+        error_handler=lambda e: print(f" Failed to register application: {e}"))
 
     # Register Advertisement
     ad_manager = dbus.Interface(bus.get_object(BLUEZ_SERVICE_NAME, adapter_path),
                                 ADVERTISING_MANAGER_IFACE)
     advertisement = Advertisement(bus)
     ad_manager.RegisterAdvertisement(advertisement.PATH, {},
-        reply_handler=lambda: print("📢 Advertisement registered"),
-        error_handler=lambda e: print(f"❌ Failed to register advertisement: {e}"))
+        reply_handler=lambda: print(" Advertisement registered"),
+        error_handler=lambda e: print(f" Failed to register advertisement: {e}"))
 
     try:
         GLib.MainLoop().run()
