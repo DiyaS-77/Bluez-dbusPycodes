@@ -18,3 +18,59 @@ Comment=Python IDE by JetBrains
 Categories=Development;IDE;
 Terminal=false
 StartupNotify=true
+
+
+
+import sys
+from PyQt6.QtWidgets import (
+    QApplication, QWidget, QLabel, QVBoxLayout,
+    QMessageBox, QPushButton
+)
+from PyQt6.QtGui import QPixmap
+
+
+class MainWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        self.setWindowTitle('Logo Display Prompt')
+        self.setGeometry(100, 100, 300, 200)
+
+        # Layout for the window
+        self.layout = QVBoxLayout()
+        self.setLayout(self.layout)
+
+        # Ask the user if they want to display the logo
+        self.ask_to_display_logo()
+
+    def ask_to_display_logo(self):
+        reply = QMessageBox.question(
+            self,
+            'Display Logo',
+            'Do you want to display the logo?',
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
+            self.show_logo()
+            QMessageBox.information(self, 'Logo', 'Visca Barca!')
+        else:
+            QMessageBox.information(self, 'Cancelled', 'Logo display was cancelled.')
+
+    def show_logo(self):
+        label = QLabel()
+        pixmap = QPixmap('fcb-logo.png')
+
+        if pixmap.isNull():
+            QMessageBox.critical(self, 'Error', 'Failed to load the logo image.')
+            return
+
+        label.setPixmap(pixmap.scaled(200, 200))
+        self.layout.addWidget(label)
+
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    sys.exit(app.exec())
