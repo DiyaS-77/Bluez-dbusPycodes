@@ -64,29 +64,18 @@ class BluetoothUIApp(QMainWindow):
     """ Class for creating the bluetooth application for controller testing."""
     def __init__(self):
         super().__init__()
-        self.log_path = '/root/Desktop/BT_Automation/BT_UI'
-        #self.log_manager = LogManager(interface="hci0", log_path=self.log_path)
-        #self.log_manager.start_all_logs()
+        self.logger_init()
         self.bluez_logger = BluezLogger(self.log_path)
-        #self.bluez_logger = BluezLogger(self.log.log_path)
-        #self.log = Logger("UI")
-        #self.logger_init()
-        #self.bluez_logger = BluezLogger(self.log.log_path)
         self.bluez_logger.start_dbus_service()
         self.bluez_logger.start_bluetoothd_logs()
         self.bluez_logger.start_pulseaudio_logs()
-        # self.agent_runner = AgentRunner(capability="DisplayYesNo")
-        # self.agent_runner.confirmation_requested.connect(self.show_confirmation_dialog)
-        # self.agent_runner.start()
+
 
         self.scroll = None
         self.content_layout = None
         self.content_widget = None
         #self.window = QMainWindow()
         self.log = Logger("UI")
-        self.logger_init()
-        #self.bluez_logger = BluezLogger(self.log.log_path)
-        #self.controller = Controller(self.log, self.log.log_path)
         self.controller = Controller(self.log)
         controllers = self.controller.get_controllers_connected()
         for bd_addr, interface in controllers.items():
@@ -115,10 +104,10 @@ class BluetoothUIApp(QMainWindow):
     def logger_init(self):
         """ Creates log folder and sets up the logger file. """
         log_time = time.strftime('%Y_%m_%d_%H_%M_%S', time.localtime(time.time()))
-        path = os.path.join(os.path.curdir, f"{log_time}_logs")
-        if not os.path.exists(path):
-            os.mkdir(path)
-        self.log.setup_logger_file(path)
+        self.log_path = os.path.join(os.path.curdir, f"{log_time}_logs")
+        if not os.path.exists(self.log_path):
+            os.mkdir(self.log_path)
+        self.log.setup_logger_file(self.log_path)
 
  
 
@@ -488,7 +477,7 @@ if __name__ == "__main__":
     app_window = BluetoothUIApp()
     app_window.setWindowIcon(QIcon('/root/Desktop/BT_Automation/images/app_icon.png'))
     #app_window.main_window()
-    #app_window.list_controllers()
+    app_window.list_controllers()
     app_window.showMaximized()
 
 
