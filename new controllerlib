@@ -22,8 +22,8 @@ class Controller:
         self.controllers_list = {}
         self.handles = None
         self.log = log
+        self.bluez_logger=bluez_logger
         self.interface = None
-        self.logfile_path = '/tmp/hcidump_logs/'
         self.logfile_fd = None
         self.file_position = None
         self.hcidump_log_name = None
@@ -79,12 +79,12 @@ class Controller:
                 details = '\n'.join([details, f"Manufacturer: {match[1]}"])
         return details
 
-    def start_dump_logs(self,bluez_logger):
-      bluez_logger.start_dump_logs(self.interface)
+    def start_dump_logs(self):
+      self.bluez_logger.start_dump_logs(self.interface)
       self.hci_dump_started=True
 
-    def stop_dump_logs(self,bluez_logger):
-      bluez_logger.stop_dump_logs(self.interface)
+    def stop_dump_logs(self):
+      self. bluez_logger.stop_dump_logs(self.interface)
       self.hci_dump_started=False
 
 
