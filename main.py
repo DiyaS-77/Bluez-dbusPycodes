@@ -52,3 +52,63 @@ while True:
                 BT_Manager.media_player()
         elif user_input == '14':
                 break
+
+def start_bluetoothd_logs(self, log_text_browser=None):
+    self.bluetoothd_log_name = os.path.join(self.log_path, "bluetoothd.log")
+
+    # PREVENT OLD PROCESSES
+    subprocess.run("pkill -f bluetoothd", shell=True)
+    time.sleep(1)
+
+    bluetoothd_command = '/usr/local/bluez/bluez-tools/libexec/bluetooth/bluetoothd -nd --compat'
+    print(f"[INFO] Starting bluetoothd logs...{bluetoothd_command}")
+    self.bluetoothd_process = subprocess.Popen(
+        bluetoothd_command.split(),
+        stdout=open(self.bluetoothd_log_name, 'a+'),
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+        universal_newlines=True
+    )
+    time.sleep(1)
+
+    self.bluetoothd_logfile_fd = open(self.bluetoothd_log_name, 'r')
+    self.bluetoothd_file_position = self.bluetoothd_logfile_fd.tell()
+
+    if log_text_browser is not None:
+        self.bluetoothd_log_reader = HcidumpLogReader(self.bluetoothd_log_name)
+        self.bluetoothd_log_reader.log_updated.connect(log_text_browser.append)
+        self.bluetoothd_log_reader.start()
+
+    print(f"[INFO] Bluetoothd logs started: {self.bluetoothd_log_name}")
+    return True
+
+
+def start_pulseaudio_logs(self, log_text_browser=None):
+    self.pulseaudio_log_name = os.path.join(self.log_path, "pulseaudio.log")
+
+    # PREVENT OLD PROCESSES
+    subprocess.run("pkill -f pulseaudio", shell=True)
+    time.sleep(1)
+
+    pulseaudio_command = '/usr/local/bluez/pulseaudio-13.0_for_bluez-5.65/bin/pulseaudio -vvv'
+    print(f"[INFO] Starting pulseaudio logs...{pulseaudio_command}")
+    self.pulseaudio_process = subprocess.Popen(
+        pulseaudio_command.split(),
+        stdout=open(self.pulseaudio_log_name, 'a+'),
+        stderr=subprocess.STDOUT,
+        bufsize=1,
+        universal_newlines=True
+    )
+    time.sleep(1)
+
+    self.pulseaudio_logfile_fd = open(self.pulseaudio_log_name, 'r')
+    self.pulseaudio_file_position = self.pulseaudio_logfile_fd.tell()
+
+    if log_text_browser is not None:
+        self.pulseaudio_log_reader = HcidumpLogReader(self.pulseaudio_log_name)
+        self.pulseaudio_log_reader.log_updated.connect(log_text_browser.append)
+        self.pulseaudio_log_reader.start()
+
+    print(f"[INFO] Pulseaudio logs started: {self.pulseaudio_log_name}")
+    return True
+
