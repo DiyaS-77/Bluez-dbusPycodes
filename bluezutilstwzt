@@ -1,0 +1,131 @@
+def start_bluetoothd_logs(self, interface=None, log_text_browser=None):
+    """Start bluetoothd logs and optionally stream to QTextBrowser."""
+    try:
+        self.bluetoothd_log_name = os.path.join(self.log_path, 'bluetoothd.log')
+        bluetoothd_command = '/usr/local/bluez/bluez-tools/libexec/bluetooth/bluetoothd -nd --compat'
+
+        print(f"[INFO] Starting bluetoothd: {bluetoothd_command}")
+        self.bluetoothd_process = subprocess.Popen(
+            bluetoothd_command.split(),
+            stdout=open(self.bluetoothd_log_name, 'a+'),
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+            universal_newlines=True
+        )
+
+        time.sleep(1)
+
+        self.bluetoothd_logfile_fd = open(self.bluetoothd_log_name, 'r')
+        self.bluetoothd_file_position = self.bluetoothd_logfile_fd.tell()
+
+        if log_text_browser is not None:
+            self.bluetoothd_logfile_fd.seek(0)
+            log_text_browser.clear()
+            log_text_browser.append(self.bluetoothd_logfile_fd.read())
+
+            self.bluetoothd_log_watcher = LogWatcher(self.bluetoothd_log_name, log_text_browser)
+            self.bluetoothd_observer = Observer()
+            self.bluetoothd_observer.schedule(self.bluetoothd_log_watcher, path='.', recursive=False)
+            self.bluetoothd_observer.start()
+
+            self.bluetoothd_timer = QTimer()
+            self.bluetoothd_timer.timeout.connect(self.update_bluetoothd_log)
+            self.bluetoothd_timer.start(1000)
+
+        return True
+
+    except Exception as e:
+        print(f"[ERROR] Failed to start bluetoothd logs: {e}")
+        return False
+
+def stop_bluetoothd_logs(self):
+    """Stop bluetoothd logs."""
+    print("[INFO] Stopping bluetoothd logs")
+
+    try:
+        if self.bluetoothd_timer:
+            self.bluetoothd_timer.stop()
+
+        if hasattr(self, 'bluetoothd_observer') and self.bluetoothd_observer:
+            self.bluetoothd_observer.stop()
+            self.bluetoothd_observer.join()
+
+        if self.bluetoothd_logfile_fd:
+            self.bluetoothd_logfile_fd.close()
+
+        if self.bluetoothd_process:
+            self.bluetoothd_process.terminate()
+            self.bluetoothd_process.wait(timeout=5)
+            self.bluetoothd_process = None
+        else:
+            # Kill manually if not tracked
+            subprocess.run(['pkill', '-f', 'bluetoothd'])
+
+    except Exception as e:
+        print(f"[ERROR] Error stopping bluetoothd: {e}")
+
+
+def start_pulseaudio_logs(self, interface=None, log_text_browser=None):
+    """Start pulseaudio logs and optionally stream to QTextBrowser."""
+    try:
+        self.pulseaudio_log_name = os.path.join(self.log_path, 'pulseaudio.log')
+        pulseaudio_command = '/usr/local/bluez/pulseaudio-13.0_for_bluez-5.65/bin/pulseaudio -vvv'
+
+        print(f"[INFO] Starting pulseaudio: {pulseaudio_command}")
+        self.pulseaudio_process = subprocess.Popen(
+            pulseaudio_command.split(),
+            stdout=open(self.pulseaudio_log_name, 'a+'),
+            stderr=subprocess.STDOUT,
+            bufsize=1,
+            universal_newlines=True
+        )
+
+        time.sleep(1)
+
+        self.pulseaudio_logfile_fd = open(self.pulseaudio_log_name, 'r')
+        self.pulseaudio_file_position = self.pulseaudio_logfile_fd.tell()
+
+        if log_text_browser is not None:
+            self.pulseaudio_logfile_fd.seek(0)
+            log_text_browser.clear()
+            log_text_browser.append(self.pulseaudio_logfile_fd.read())
+
+            self.pulseaudio_log_watcher = LogWatcher(self.pulseaudio_log_name, log_text_browser)
+            self.pulseaudio_observer = Observer()
+            self.pulseaudio_observer.schedule(self.pulseaudio_log_watcher, path='.', recursive=False)
+            self.pulseaudio_observer.start()
+
+            self.pulseaudio_timer = QTimer()
+            self.pulseaudio_timer.timeout.connect(self.update_pulseaudio_log)
+            self.pulseaudio_timer.start(1000)
+
+        return True
+
+    except Exception as e:
+        print(f"[ERROR] Failed to start pulseaudio logs: {e}")
+        return False
+
+def stop_pulseaudio_logs(self):
+    """Stop pulseaudio logs."""
+    print("[INFO] Stopping pulseaudio logs")
+
+    try:
+        if self.pulseaudio_timer:
+            self.pulseaudio_timer.stop()
+
+        if hasattr(self, 'pulseaudio_observer') and self.pulseaudio_observer:
+            self.pulseaudio_observer.stop()
+            self.pulseaudio_observer.join()
+
+        if self.pulseaudio_logfile_fd:
+            self.pulseaudio_logfile_fd.close()
+
+        if self.pulseaudio_process:
+            self.pulseaudio_process.terminate()
+            self.pulseaudio_process.wait(timeout=5)
+            self.pulseaudio_process = None
+        else:
+            subprocess.run(['pkill', '-f', 'pulseaudio'])
+
+    except Exception as e:
+        print(f"[ERROR] Error stopping pulseaudio: {e}")
